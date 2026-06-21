@@ -3,7 +3,7 @@
 .page {
   min-height: 100vh;
   background: $color-bg-page;
-  padding-bottom: 220rpx;
+  padding-bottom: 240rpx;
 }
 
 .headerCard {
@@ -38,6 +38,16 @@
   line-height: 1.6;
 }
 
+.resubmitBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: $spacing-sm;
+  padding: 4rpx 12rpx;
+  background: rgba(239, 68, 68, 0.25);
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+}
+
 .section {
   margin: 0 $page-spacing $spacing-md;
 }
@@ -60,6 +70,51 @@
   border-radius: $radius-lg;
   padding: $spacing-lg;
   box-shadow: $shadow-card;
+}
+
+.rejectionAlert {
+  padding: $spacing-md;
+  background: rgba(239, 68, 68, 0.08);
+  border: 2rpx solid rgba(239, 68, 68, 0.3);
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+}
+
+.rejectionTitle {
+  font-size: $font-size-sm;
+  color: $color-error;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-xs;
+}
+
+.rejectionReason {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.rejectionHistoryItem {
+  padding: $spacing-md;
+  background: $color-bg-gray;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+  border-left: 6rpx solid $color-error;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.rejectionHistoryTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 4rpx;
+}
+
+.rejectionHistoryReason {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  line-height: $line-height-normal;
 }
 
 .violationItem {
@@ -125,6 +180,13 @@
   font-size: $font-size-sm;
   color: $color-text-tertiary;
   margin-bottom: $spacing-sm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.blockTime {
+  font-size: $font-size-xs;
 }
 
 .blockContent {
@@ -136,6 +198,48 @@
   border-radius: $radius-md;
 }
 
+.attachmentList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.attachmentItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  background: rgba(43, 90, 255, 0.06);
+  border-radius: $radius-sm;
+  border: 2rpx solid rgba(43, 90, 255, 0.15);
+  max-width: 100%;
+}
+
+.attachmentIcon {
+  font-size: $font-size-lg;
+}
+
+.attachmentName {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  @include text-ellipsis;
+  max-width: 280rpx;
+}
+
+.attachmentImage {
+  width: 100%;
+  border-radius: $radius-md;
+  margin-top: $spacing-sm;
+  overflow: hidden;
+
+  image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
 .actionSwitch {
   display: flex;
   gap: $spacing-sm;
@@ -144,7 +248,7 @@
 
 .switchBtn {
   flex: 1;
-  height: 80rpx;
+  height: 96rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,15 +258,23 @@
   color: $color-text-secondary;
   font-weight: $font-weight-medium;
   transition: all $transition-base;
+  flex-direction: column;
+  gap: 4rpx;
+
+  .switchHint {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-normal;
+    opacity: 0.7;
+  }
 
   &.activeAppeal {
-    background: rgba(139, 92, 246, 0.1);
+    background: rgba(139, 92, 246, 0.08);
     border-color: #8B5CF6;
     color: #8B5CF6;
   }
 
   &.activeAdmit {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.08);
     border-color: #10B981;
     color: #10B981;
   }
@@ -189,10 +301,47 @@
   color: $color-text-primary;
   background: $color-bg-gray;
   line-height: $line-height-normal;
-  min-height: 200rpx;
+  min-height: 240rpx;
 
   &::placeholder {
     color: $color-text-tertiary;
+  }
+}
+
+.uploadSection {
+  margin-top: $spacing-md;
+}
+
+.uploadLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.uploadActions {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  width: calc(50% - 8rpx);
+  height: 96rpx;
+  border-radius: $radius-md;
+  border: 2rpx dashed $color-border;
+  background: $color-bg-gray;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+
+  &:active {
+    border-color: $color-primary;
+    background: $color-primary-bg;
+    color: $color-primary;
   }
 }
 
@@ -306,5 +455,10 @@
   &.disabled {
     background: $color-text-disabled;
     box-shadow: none;
+  }
+
+  &.resubmit {
+    background: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
+    box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.25);
   }
 }

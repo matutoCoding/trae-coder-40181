@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import classnames from 'classnames'
-import { mockTasks } from '@/data/tasks'
-import { TaskStatus, RectificationTask, UserRole, TASK_STATUS_MAP } from '@/types'
+import { TaskStatus, UserRole } from '@/types'
+import { useQCStore } from '@/store'
 import TaskCard from '@/components/TaskCard'
 import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
@@ -17,13 +17,14 @@ const TABS: TabItem[] = [
   { key: 'pending', label: '待确认' },
   { key: 'appealing', label: '申诉中' },
   { key: 'rectifying', label: '整改中' },
+  { key: 'rejected', label: '已驳回' },
   { key: 'confirmed', label: '已确认' }
 ]
 
 const TasksPage: React.FC = () => {
   const [currentRole, setCurrentRole] = useState<UserRole>('supplier')
   const [activeTab, setActiveTab] = useState<TabItem['key']>('all')
-  const [tasks] = useState<RectificationTask[]>(mockTasks)
+  const tasks = useQCStore(state => state.tasks)
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -36,8 +37,9 @@ const TasksPage: React.FC = () => {
     const pending = tasks.filter(t => t.status === 'pending').length
     const appealing = tasks.filter(t => t.status === 'appealing').length
     const rectifying = tasks.filter(t => t.status === 'rectifying').length
+    const rejected = tasks.filter(t => t.status === 'rejected').length
     const done = tasks.filter(t => t.status === 'confirmed' || t.status === 'completed').length
-    return { pending, appealing, rectifying, done }
+    return { pending, appealing, rectifying, rejected, done }
   }, [tasks])
 
   return (
@@ -70,6 +72,10 @@ const TasksPage: React.FC = () => {
           <View className={styles.summaryItem}>
             <Text className={styles.summaryNum} style={{ color: '#2B5AFF' }}>{summary.rectifying}</Text>
             <Text className={styles.summaryLabel}>整改中</Text>
+          </View>
+          <View className={styles.summaryItem}>
+            <Text className={styles.summaryNum} style={{ color: '#EF4444' }}>{summary.rejected}</Text>
+            <Text className={styles.summaryLabel}>已驳回</Text>
           </View>
           <View className={styles.summaryItem}>
             <Text className={styles.summaryNum} style={{ color: '#10B981' }}>{summary.done}</Text>

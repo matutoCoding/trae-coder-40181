@@ -1,29 +1,30 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
-import Taro, { useRouter, useDidShow } from '@tarojs/taro'
-import classnames from 'classnames'
-import { mockCalls } from '@/data/calls'
+import Taro, { useRouter } from '@tarojs/taro'
 import {
-  CallRecord, TranscriptLine, Violation, ViolationCategory, EMOTION_MAP, VIOLATION_CATEGORY_MAP } from '@/types'
-import { formatDuration, generateId, getTodayDate } from '@/utils'
+  TranscriptLine, Violation, ViolationCategory, EMOTION_MAP, VIOLATION_CATEGORY_MAP
+} from '@/types'
+import { formatDuration } from '@/utils'
+import { useQCStore } from '@/store'
 import TranscriptItem from '@/components/TranscriptItem'
 import TagSelector from '@/components/TagSelector'
 import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
 
+const SUPPLIERS = ['恒信外包-张主管', '卓越客服-李经理', '速达服务-赵主管', '优才服务-王主管']
+
 const CallDetailPage: React.FC = () => {
   const router = useRouter()
   const callId = router.params.id || 'c1'
 
-  const [call, setCall] = useState<CallRecord | null>(null)
+  const call = useQCStore(state => state.calls.find(c => c.id === callId) || state.calls[0])
+  const addViolationToCall = useQCStore(state => state.addViolationToCall)
+  const removeViolationFromCall = useQCStore(state => state.removeViolationFromCall)
+  const createTaskFromCall = useQCStore(state => state.createTaskFromCall)
+  const updateCall = useQCStore(state => state.updateCall)
+
   const [selectorVisible, setSelectorVisible] = useState(false)
   const [selectedLine, setSelectedLine] = useState<TranscriptLine | null>(null)
-
-  useEffect(() => {
-    const found = mockCalls.find(c => c.id === callId) || mockCalls[0]
-    setCall(found)
-    console.log('[CallDetail] Loaded call:', found.id, 'violations:', found.violations.length)
-  }, [callId])
 
   const violationMap = useMemo(() => {
     const map = new Map<string, Violation>()
@@ -55,8 +56,7 @@ const CallDetailPage: React.FC = () => {
       content: '确定要取消此问题标记吗？',
       success: (res) => {
         if (res.confirm) {
-          const newViolations = call.violations.filter(v => v.transcriptLineId !== lineId)
-          setCall({ ...call, violations: newViolations })
+          removeViolationFromCall(call.id, lineId)
           Taro.showToast({ title: '已取消', icon: 'success' })
         }
       }
@@ -65,23 +65,29 @@ const CallDetailPage: React.FC = () => {
 
   const handleMarkViolation = (category: ViolationCategory, description: string) => {
     if (!call || !selectedLine) return
-    const now = new Date()
-    const timeStr = `${getTodayDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    const newViolation: Violation = {
-      id: generateId(),
-      transcriptLineId: selectedLine.id,
+    addViolationToCall(
+      call.id,
+      selectedLine.id,
       category,
-      description: description || VIOLATION_CATEGORY_MAP[category].label,
-      createdAt: timeStr,
-      createdBy: '质检-当前用户'
-    }
-    setCall({
-      ...call,
-      violations: [...call.violations, newViolation],
-      status: 'marked'
-    })
+      description,
+      '质检-当前用户'
+    )
     Taro.showToast({ title: '标记成功', icon: 'success' })
-    console.log('[CallDetail] Marked violation:', newViolation)
+    setSelectedLine(null)
+  }
+
+  const pickSupplierAndAssign = () => {
+    if (!call) return
+    Taro.showActionSheet({
+      itemList: SUPPLIERS
+    }).then(res => {
+      const selectedSupplier = SUPPLIERS[res.tapIndex]
+      const newTask = createTaskFromCall(call.id, selectedSupplier)
+      if (newTask) {
+        Taro.showToast({ title: '已分配给 ' + selectedSupplier, icon: 'success' })
+        setTimeout(() => Taro.navigateBack(), 1000)
+      }
+    }).catch(() => {})
   }
 
   const handleSubmitTask = () => {
@@ -92,24 +98,23 @@ const CallDetailPage: React.FC = () => {
         content: '当前未标记任何问题，是否确认标记为"无异常"？',
         success: (res) => {
           if (res.confirm) {
+            updateCall(call.id, { status: 'closed' })
             Taro.showToast({ title: '已标记完成', icon: 'success' })
             setTimeout(() => Taro.navigateBack(), 800)
           }
         }
       })
       return
-    } else {
-      Taro.showModal({
-        title: '提交整改任务',
-        content: `共标记 ${call.violations.length} 处问题，是否分配给供应商处理？`,
-        success: (res) => {
-          if (res.confirm) {
-            Taro.showToast({ title: '已分配任务', icon: 'success' })
-            setTimeout(() => Taro.navigateBack(), 800)
-          }
-        }
-      })
     }
+    Taro.showModal({
+      title: '提交整改任务',
+      content: `共标记 ${call.violations.length} 处问题，点击确认后选择分配对象。`,
+      success: (res) => {
+        if (res.confirm) {
+          pickSupplierAndAssign()
+        }
+      }
+    })
   }
 
   if (!call) return null
@@ -240,7 +245,7 @@ const CallDetailPage: React.FC = () => {
       <TagSelector
         visible={selectorVisible}
         line={selectedLine}
-        onClose={() => setSelectorVisible(false)}
+        onClose={() => { setSelectorVisible(false); setSelectedLine(null) }}
         onConfirm={handleMarkViolation}
       />
     </>

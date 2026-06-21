@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
-import { mockCalls, mockProjects } from '@/data/calls'
-import { CallRecord, Project } from '@/types'
+import Taro from '@tarojs/taro'
+import { mockProjects } from '@/data/calls'
+import { Project } from '@/types'
 import { getTodayDate } from '@/utils'
+import { useQCStore } from '@/store'
 import CallCard from '@/components/CallCard'
 import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
@@ -11,23 +12,19 @@ import styles from './index.module.scss'
 const CallsPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [selectedDate, setSelectedDate] = useState(getTodayDate())
-  const [allCalls, setAllCalls] = useState<CallRecord[]>(mockCalls)
-
-  useDidShow(() => {
-    console.log('[CallsPage] Page showed, call count:', allCalls.length)
-  })
+  const calls = useQCStore(state => state.calls)
 
   const filteredCalls = useMemo(() => {
-    return allCalls.filter(call => {
+    return calls.filter(call => {
       const projectMatch = !selectedProject || call.projectId === selectedProject.id
       const dateMatch = call.date === selectedDate
       return projectMatch && dateMatch
     })
-  }, [allCalls, selectedProject, selectedDate])
+  }, [calls, selectedProject, selectedDate])
 
   const stats = useMemo(() => {
     const total = filteredCalls.length
-    const withIssues = filteredCalls.filter(c => c.suspectedViolationCount > 0).length
+    const withIssues = filteredCalls.filter(c => c.violations.length > 0).length
     const clean = total - withIssues
     return { total, withIssues, clean }
   }, [filteredCalls])
@@ -66,7 +63,6 @@ const CallsPage: React.FC = () => {
       refresherEnabled
       refresherTriggered={false}
       onRefresherRefresh={() => {
-        console.log('[CallsPage] Pull to refresh')
         setTimeout(() => Taro.stopPullDownRefresh(), 800)
       }}
     >
@@ -95,7 +91,7 @@ const CallsPage: React.FC = () => {
           </View>
           <View className={styles.statCard}>
             <Text className={`${styles.statNum} ${styles.warn}`}>{stats.withIssues}</Text>
-            <Text className={styles.statLabel}>疑似问题</Text>
+            <Text className={styles.statLabel}>已标记问题</Text>
           </View>
           <View className={styles.statCard}>
             <Text className={`${styles.statNum} ${styles.ok}`}>{stats.clean}</Text>
