@@ -19,7 +19,7 @@ const METRICS: TabItem[] = [
   { key: 'appealing', label: '申诉中', color: '#8B5CF6' },
   { key: 'rectifying', label: '整改中', color: '#2B5AFF' },
   { key: 'rejected', label: '已驳回', color: '#EF4444' },
-  { key: 'confirmed', label: '已确认', color: '#10B981' },
+  { key: 'confirmed', label: '待抽检', color: '#10B981' },
   { key: 'completed', label: '已完成', color: '#6B7280' }
 ]
 
@@ -30,20 +30,24 @@ interface RejectRemark {
 
 const TasksPage: React.FC = () => {
   const tasks = useQCStore(state => state.tasks)
+  const tasksFilter = useQCStore(state => state.tasksFilter)
+  const setTasksFilter = useQCStore(state => state.setTasksFilter)
   const batchRectify = useQCStore(state => state.batchRectify)
   const batchConfirm = useQCStore(state => state.batchConfirm)
   const batchReject = useQCStore(state => state.batchReject)
+  const batchSpotCheck = useQCStore(state => state.batchSpotCheck)
+  const batchSpotCheckReject = useQCStore(state => state.batchSpotCheckReject)
 
-  const [currentRole, setCurrentRole] = useState<UserRole>('supplier')
-  const [activeTab, setActiveTab] = useState<TabItem['key']>('all')
-  const [filterProject, setFilterProject] = useState<string | null>(null)
-  const [filterSupplier, setFilterSupplier] = useState<string | null>(null)
+  const [currentRole, setCurrentRole] = useState<UserRole>('partyA')
+  const [activeTab, setActiveTab] = useState<TabItem['key']>(tasksFilter.tab || 'all')
+  const [filterProject, setFilterProject] = useState<string | null>(tasksFilter.project || null)
+  const [filterSupplier, setFilterSupplier] = useState<string | null>(tasksFilter.supplier || null)
 
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const [showBatchModal, setShowBatchModal] = useState(false)
-  const [batchAction, setBatchAction] = useState<'rectify' | 'confirm' | 'reject'>('rectify')
+  const [batchAction, setBatchAction] = useState<'rectify' | 'confirm' | 'reject' | 'spotcheckReject'>('rectify')
   const [commonRectifyAction, setCommonRectifyAction] = useState('')
   const [rejectRemarks, setRejectRemarks] = useState<RejectRemark[]>([])
 
@@ -85,8 +89,11 @@ const TasksPage: React.FC = () => {
     if (currentRole === 'supplier') {
       return filteredTasks.filter(t => t.status === 'pending' || t.status === 'rejected')
     }
+    if (activeTab === 'confirmed') {
+      return filteredTasks.filter(t => t.status === 'confirmed' && !t.spotChecked)
+    }
     return filteredTasks.filter(t => t.status === 'appealing' || t.status === 'rectifying')
-  }, [filteredTasks, currentRole])
+  }, [filteredTasks, currentRole, activeTab])
 
   const batchCandidates = useMemo(() => {
     if (!selectMode) return []
@@ -103,19 +110,24 @@ const TasksPage: React.FC = () => {
     setActiveTab(key)
     setSelectMode(false)
     setSelectedIds([])
+    setTasksFilter({ tab: key })
   }
 
   const handleProjectFilter = () => {
     const options = ['全部项目', ...uniqueProjects]
     Taro.showActionSheet({ itemList: options }).then(res => {
-      setFilterProject(res.tapIndex === 0 ? null : uniqueProjects[res.tapIndex - 1])
+      const p = res.tapIndex === 0 ? null : uniqueProjects[res.tapIndex - 1]
+      setFilterProject(p)
+      setTasksFilter({ project: p })
     }).catch(() => {})
   }
 
   const handleSupplierFilter = () => {
     const options = ['全部供应商', ...uniqueSuppliers]
     Taro.showActionSheet({ itemList: options }).then(res => {
-      setFilterSupplier(res.tapIndex === 0 ? null : uniqueSuppliers[res.tapIndex - 1])
+      const s = res.tapIndex === 0 ? null : uniqueSuppliers[res.tapIndex - 1]
+      setFilterSupplier(s)
+      setTasksFilter({ supplier: s })
     }).catch(() => {})
   }
 
@@ -181,6 +193,34 @@ const TasksPage: React.FC = () => {
     setShowBatchModal(true)
   }
 
+  const handleBatchSpotCheckPass = () => {
+    if (batchCandidates.length === 0) return
+    Taro.showModal({
+      title: '批量抽检通过',
+      content: `确定抽检通过 ${batchCandidates.length} 条任务？通过后将标记为已完成。`,
+      success: (res) => {
+        if (res.confirm) {
+          const n = batchSpotCheck(
+            batchCandidates.map(t => t.id),
+            true,
+            '批量抽检通过',
+            '质检-当前用户'
+          )
+          Taro.showToast({ title: `抽检通过 ${n} 条`, icon: 'success' })
+          setSelectMode(false)
+          setSelectedIds([])
+        }
+      }
+    })
+  }
+
+  const handleBatchSpotCheckRejectOpen = () => {
+    if (batchCandidates.length === 0) return
+    setBatchAction('spotcheckReject')
+    setRejectRemarks(batchCandidates.map(t => ({ taskId: t.id, remark: '' })))
+    setShowBatchModal(true)
+  }
+
   const handleRejectRemarkChange = (taskId: string, value: string) => {
     setRejectRemarks(prev => prev.map(r => r.taskId === taskId ? { ...r, remark: value } : r))
   }
@@ -199,13 +239,14 @@ const TasksPage: React.FC = () => {
       setShowBatchModal(false)
       setSelectMode(false)
       setSelectedIds([])
-    } else if (batchAction === 'reject') {
+    } else if (batchAction === 'reject' || batchAction === 'spotcheckReject') {
       const unfilled = rejectRemarks.filter(r => !r.remark.trim())
       if (unfilled.length > 0) {
         Taro.showToast({ title: `有 ${unfilled.length} 条未填驳回意见`, icon: 'none' })
         return
       }
-      const n = batchReject(
+      const fn = batchAction === 'reject' ? batchReject : batchSpotCheckReject
+      const n = fn(
         rejectRemarks.filter(r => r.remark.trim()).map(r => ({ taskId: r.taskId, remark: r.remark.trim() })),
         '质检-当前用户'
       )
@@ -318,6 +359,21 @@ const TasksPage: React.FC = () => {
                 >
                   批量整改
                 </View>
+              ) : activeTab === 'confirmed' ? (
+                <>
+                  <View
+                    className={classnames(styles.batchActionBtn, styles.primary)}
+                    onClick={handleBatchSpotCheckPass}
+                  >
+                    批量抽检通过
+                  </View>
+                  <View
+                    className={classnames(styles.batchActionBtn, styles.danger)}
+                    onClick={handleBatchSpotCheckRejectOpen}
+                  >
+                    批量抽检驳回
+                  </View>
+                </>
               ) : (
                 <>
                   <View
@@ -404,6 +460,7 @@ const TasksPage: React.FC = () => {
             <View className={styles.modalHeader}>
               <Text className={styles.modalTitle}>
                 {batchAction === 'rectify' ? `批量整改（${batchCandidates.length} 条）` :
+                 batchAction === 'spotcheckReject' ? `批量抽检驳回（${batchCandidates.length} 条）` :
                  `批量驳回（${batchCandidates.length} 条）`}
               </Text>
               <Text className={styles.modalClose} onClick={() => setShowBatchModal(false)}>×</Text>
@@ -468,11 +525,12 @@ const TasksPage: React.FC = () => {
               <View
                 className={classnames(
                   styles.modalBtn,
-                  batchAction === 'reject' ? styles.danger : styles.confirm
+                  batchAction === 'reject' || batchAction === 'spotcheckReject' ? styles.danger : styles.confirm
                 )}
                 onClick={handleBatchSubmit}
               >
-                {batchAction === 'rectify' ? '提交整改' : '提交驳回'}
+                {batchAction === 'rectify' ? '提交整改' :
+                 batchAction === 'spotcheckReject' ? '提交抽检驳回' : '提交驳回'}
               </View>
             </View>
           </View>

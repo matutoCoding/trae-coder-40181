@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useQCStore } from '@/store'
-import { RectificationTask, TASK_STATUS_MAP } from '@/types'
+import { RectificationTask, TASK_STATUS_MAP, Attachment } from '@/types'
+import { getTodayDate } from '@/utils'
 import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
 
@@ -17,25 +18,54 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'completed', label: '已完成' }
 ]
 
+const isTaskOverdue = (task: RectificationTask, today: string): boolean => {
+  if (task.status === 'completed') return false
+  if (!task.expectedCompleteDate) return false
+  return task.expectedCompleteDate < today
+}
+
+const collectAllAttachments = (task: RectificationTask): Attachment[] => {
+  const list: Attachment[] = []
+  task.appealAttachments?.forEach(a => list.push(a))
+  task.rectificationAttachments?.forEach(a => list.push(a))
+  task.rectificationVersions?.forEach(v => v.attachments.forEach(a => list.push(a)))
+  const seenIds = new Set<string>()
+  return list.filter(a => {
+    if (seenIds.has(a.id)) return false
+    seenIds.add(a.id)
+    return true
+  })
+}
+
 const LedgerPage: React.FC = () => {
   const tasks = useQCStore(state => state.tasks)
   const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
+  const today = getTodayDate()
+
+  const tasksWithMeta = useMemo(() => {
+    return tasks
+      .filter(t => t.status !== 'pending' && t.status !== 'appealing')
+      .map(t => ({
+        task: t,
+        overdue: isTaskOverdue(t, today),
+        allAttachments: collectAllAttachments(t)
+      }))
+  }, [tasks, today])
 
   const stats = useMemo(() => {
-    const total = tasks.filter(t => t.status !== 'pending' && t.status !== 'appealing').length
-    const rectifying = tasks.filter(t => t.status === 'rectifying').length
-    const overdue = tasks.filter(t => t.overdue).length
-    const rejected = tasks.filter(t => t.status === 'rejected').length
-    const completed = tasks.filter(t => t.status === 'completed').length
+    const total = tasksWithMeta.length
+    const rectifying = tasksWithMeta.filter(x => x.task.status === 'rectifying').length
+    const overdue = tasksWithMeta.filter(x => x.overdue).length
+    const rejected = tasksWithMeta.filter(x => x.task.status === 'rejected').length
+    const completed = tasksWithMeta.filter(x => x.task.status === 'completed').length
     return { total, rectifying, overdue, rejected, completed }
-  }, [tasks])
+  }, [tasksWithMeta])
 
-  const filteredTasks = useMemo(() => {
-    const base = tasks.filter(t => t.status !== 'pending' && t.status !== 'appealing')
-    if (activeFilter === 'all') return base
-    if (activeFilter === 'overdue') return base.filter(t => t.overdue)
-    return base.filter(t => t.status === activeFilter)
-  }, [tasks, activeFilter])
+  const filteredList = useMemo(() => {
+    if (activeFilter === 'all') return tasksWithMeta
+    if (activeFilter === 'overdue') return tasksWithMeta.filter(x => x.overdue)
+    return tasksWithMeta.filter(x => x.task.status === activeFilter)
+  }, [tasksWithMeta, activeFilter])
 
   const handleTaskClick = (task: RectificationTask) => {
     Taro.navigateTo({
@@ -49,17 +79,11 @@ const LedgerPage: React.FC = () => {
     return '中优'
   }
 
-  const getAttachmentCount = (task: RectificationTask) => {
-    const appeal = task.appealAttachments?.length || 0
-    const rectify = task.rectificationAttachments?.length || 0
-    return appeal + rectify
-  }
-
   return (
     <ScrollView className={styles.page} scrollY>
       <View className={styles.header}>
         <Text className={styles.pageTitle}>📋 整改跟进台账</Text>
-        <Text className={styles.pageSubtitle}>跟踪每条整改的进度、材料和时限</Text>
+        <Text className={styles.pageSubtitle}>跟踪每条整改的进度、材料和时限（今日 {today}）</Text>
 
         <View className={styles.statBar}>
           <View className={styles.statItem}>
@@ -94,16 +118,16 @@ const LedgerPage: React.FC = () => {
       </View>
 
       <View className={styles.list}>
-        {filteredTasks.length > 0 ? (
-          filteredTasks.map(task => (
+        {filteredList.length > 0 ? (
+          filteredList.map(({ task, overdue, allAttachments }) => (
             <View
               key={task.id}
-              className={`${styles.ledgerCard} ${task.overdue ? styles.overdue : ''} ${task.priority || 'medium'}`}
+              className={`${styles.ledgerCard} ${overdue ? styles.overdue : ''} ${task.priority || 'medium'}`}
               onClick={() => handleTaskClick(task)}
             >
               <View className={styles.cardHeader}>
                 <Text className={styles.cardTitle}>
-                  {task.overdue && <Text className={styles.overdueTag}>⚠️ 超期</Text>}
+                  {overdue && <Text className={styles.overdueTag}>⚠️ 超期</Text>}
                   <Text className={`${styles.priorityTag} ${task.priority || 'medium'}`}>
                     {getPriorityLabel(task.priority)}
                   </Text>
@@ -120,12 +144,12 @@ const LedgerPage: React.FC = () => {
                 </View>
                 <View className={styles.metaItem}>
                   📅 预计完成：
-                  <Text className={task.overdue ? styles.deadlineItem : styles.metaValue}>
+                  <Text className={overdue ? styles.deadlineItem : styles.metaValue}>
                     {task.expectedCompleteDate || '-'}
                   </Text>
                 </View>
                 <View className={styles.metaItem}>
-                  📎 材料：<Text className={styles.metaValue}>{getAttachmentCount(task)} 份</Text>
+                  📎 材料：<Text className={styles.metaValue}>{allAttachments.length} 份（含历史版本）</Text>
                 </View>
                 <View className={styles.metaItem}>
                   🔄 版本：<Text className={styles.metaValue}>第{task.resubmitCount || 0}版</Text>
@@ -140,19 +164,19 @@ const LedgerPage: React.FC = () => {
 
               {(task.rectificationVersions?.length || 0) > 1 && (
                 <View className={styles.versionBadge}>
-                  📝 共 {task.rectificationVersions?.length} 版整改，可对比查看
+                  📝 共 {task.rectificationVersions?.length} 版整改，点详情可对比查看
                 </View>
               )}
 
-              {task.rectificationAttachments && task.rectificationAttachments.length > 0 && (
+              {allAttachments.length > 0 && (
                 <View className={styles.attachmentsRow}>
-                  {task.rectificationAttachments.slice(0, 3).map(a => (
+                  {allAttachments.slice(0, 4).map(a => (
                     <View key={a.id} className={styles.attachItem}>
                       {a.type === 'image' ? '🖼️' : '📝'} {a.name}
                     </View>
                   ))}
-                  {task.rectificationAttachments.length > 3 && (
-                    <View className={styles.attachItem}>+{task.rectificationAttachments.length - 3}</View>
+                  {allAttachments.length > 4 && (
+                    <View className={styles.attachItem}>+{allAttachments.length - 4}</View>
                   )}
                 </View>
               )}

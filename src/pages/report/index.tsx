@@ -22,14 +22,22 @@ interface ProjectStat {
 const ReportPage: React.FC = () => {
   const calls = useQCStore(state => state.calls)
   const tasks = useQCStore(state => state.tasks)
+  const reportFilter = useQCStore(state => state.reportFilter)
+  const setReportFilter = useQCStore(state => state.setReportFilter)
+  const setCallsFilter = useQCStore(state => state.setCallsFilter)
+  const setTasksFilter = useQCStore(state => state.setTasksFilter)
 
   const availableDates = useMemo(() => {
     const set = new Set(calls.map(c => c.date))
     return Array.from(set).sort()
   }, [calls])
 
-  const [startDate, setStartDate] = useState(availableDates[0] || '2024-06-19')
-  const [endDate, setEndDate] = useState(availableDates[availableDates.length - 1] || '2024-06-20')
+  const [startDate, setStartDate] = useState(reportFilter.startDate || availableDates[0] || '2024-06-19')
+  const [endDate, setEndDate] = useState(reportFilter.endDate || availableDates[availableDates.length - 1] || '2024-06-20')
+
+  const handlePersistFilters = (sd: string, ed: string) => {
+    setReportFilter({ startDate: sd, endDate: ed })
+  }
 
   const filteredCalls = useMemo(() => {
     return calls.filter(c => c.date >= startDate && c.date <= endDate)
@@ -115,23 +123,34 @@ const ReportPage: React.FC = () => {
       itemList: availableDates
     }).then(res => {
       const d = availableDates[res.tapIndex]
+      let newStart = startDate
+      let newEnd = endDate
       if (field === 'start') {
+        newStart = d
+        if (d > endDate) newEnd = d
         setStartDate(d)
         if (d > endDate) setEndDate(d)
       } else {
+        newEnd = d
+        if (d < startDate) newStart = d
         setEndDate(d)
         if (d < startDate) setStartDate(d)
       }
+      handlePersistFilters(newStart, newEnd)
     }).catch(() => {})
   }
 
   const handleProjectClick = (projectName: string) => {
     Taro.showActionSheet({
-      itemList: ['查看对应任务', '查看对应通话']
+      itemList: ['查看对应任务列表', '查看对应通话列表']
     }).then(res => {
+      handlePersistFilters(startDate, endDate)
+      setReportFilter({ lastDrillProject: projectName })
       if (res.tapIndex === 0) {
+        setTasksFilter({ project: projectName, tab: 'all' })
         Taro.switchTab({ url: '/pages/tasks/index' })
       } else if (res.tapIndex === 1) {
+        setCallsFilter({ project: projectName, date: endDate })
         Taro.switchTab({ url: '/pages/calls/index' })
       }
     }).catch(() => {})
@@ -141,7 +160,10 @@ const ReportPage: React.FC = () => {
     <ScrollView className={styles.page} scrollY>
       <View className={styles.header}>
         <Text className={styles.pageTitle}>📊 质检报表</Text>
-        <Text className={styles.pageSubtitle}>按项目维度分析质检表现</Text>
+        <Text className={styles.pageSubtitle}>
+          按项目维度分析质检表现
+          {reportFilter.lastDrillProject && ` · 上次钻取：${reportFilter.lastDrillProject}`}
+        </Text>
 
         <View className={styles.filterRow}>
           <View className={styles.filterItem} onClick={() => handleDatePick('start')}>
@@ -209,8 +231,8 @@ const ReportPage: React.FC = () => {
 
                 <View className={styles.metricsRow} style={{ marginTop: 12 }}>
                   <View className={styles.metricChip}>
-                    <Text className={`${styles.metricChipNum} ${styles.purple}`}>{p.appealCount}</Text>
-                    <Text className={styles.metricChipLabel}>申诉数</Text>
+                    <Text className={`${styles.metricChipNum} ${styles.purple}`}>{p.appealRate}%</Text>
+                    <Text className={styles.metricChipLabel}>申诉率（{p.appealCount}条）</Text>
                   </View>
                   <View className={styles.metricChip}>
                     <Text className={`${styles.metricChipNum} ${styles.primary}`}>{p.rectifyCount}</Text>

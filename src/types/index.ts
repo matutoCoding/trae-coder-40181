@@ -69,6 +69,7 @@ export interface RejectionRecord {
   rejectedBy: string
   reason: string
   previousStatus: TaskStatus
+  type?: 'first' | 'spotcheck'
 }
 
 export interface RectificationVersion {

@@ -4,7 +4,7 @@ import Taro, { useRouter } from '@tarojs/taro'
 import {
   TranscriptLine, Violation, ViolationCategory, EMOTION_MAP, VIOLATION_CATEGORY_MAP
 } from '@/types'
-import { formatDuration } from '@/utils'
+import { formatDuration, getTodayDate } from '@/utils'
 import { useQCStore } from '@/store'
 import TranscriptItem from '@/components/TranscriptItem'
 import TagSelector from '@/components/TagSelector'
@@ -12,6 +12,12 @@ import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
 
 const SUPPLIERS = ['恒信外包-张主管', '卓越客服-李经理', '速达服务-赵主管', '优才服务-王主管']
+
+const getDefaultExpectedDate = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 2)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const CallDetailPage: React.FC = () => {
   const router = useRouter()
@@ -82,10 +88,13 @@ const CallDetailPage: React.FC = () => {
       itemList: SUPPLIERS
     }).then(res => {
       const selectedSupplier = SUPPLIERS[res.tapIndex]
-      const newTask = createTaskFromCall(call.id, selectedSupplier)
+      const expectedDate = getDefaultExpectedDate()
+      const newTask = createTaskFromCall(call.id, selectedSupplier, selectedSupplier, expectedDate)
       if (newTask) {
-        Taro.showToast({ title: '已分配给 ' + selectedSupplier, icon: 'success' })
-        setTimeout(() => Taro.navigateBack(), 1000)
+        Taro.showToast({ title: '已分配并跳转任务', icon: 'success' })
+        setTimeout(() => {
+          Taro.redirectTo({ url: `/pages/rectification/index?taskId=${newTask.id}` })
+        }, 800)
       }
     }).catch(() => {})
   }

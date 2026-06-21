@@ -36,6 +36,7 @@ const RectificationPage: React.FC = () => {
   const confirmTask = useQCStore(state => state.confirmTask)
   const updateTask = useQCStore(state => state.updateTask)
   const spotCheckTask = useQCStore(state => state.spotCheckTask)
+  const setCallsFilter = useQCStore(state => state.setCallsFilter)
 
   const [currentRole, setCurrentRole] = useState<UserRole>(
     task?.status === 'confirmed' || task?.status === 'completed' ? 'partyA' : 'supplier'
@@ -144,6 +145,13 @@ const RectificationPage: React.FC = () => {
         showCancel: false
       })
     }
+  }
+
+  const handleGotoCallList = () => {
+    const callDate = task.callRecord.date
+    const callProject = task.callRecord.projectName
+    setCallsFilter({ date: callDate, project: callProject })
+    Taro.switchTab({ url: '/pages/calls/index' })
   }
 
   const handleSubmit = () => {
@@ -335,7 +343,9 @@ const RectificationPage: React.FC = () => {
           <View className={styles.section}>
             <View className={styles.card}>
               <View className={styles.rejectionAlert}>
-                <Text className={styles.rejectionTitle}>❗ 甲方驳回提醒</Text>
+                <Text className={styles.rejectionTitle}>
+                  ❗ 甲方{task.rejectionHistory && task.rejectionHistory[task.rejectionHistory.length - 1]?.type === 'spotcheck' ? '抽检' : ''}驳回提醒
+                </Text>
                 <Text className={styles.rejectionReason}>{task.confirmRemark}</Text>
               </View>
               {task.rejectionHistory && task.rejectionHistory.length > 0 && (
@@ -347,6 +357,20 @@ const RectificationPage: React.FC = () => {
                     <View key={idx} className={styles.rejectionHistoryItem}>
                       <Text className={styles.rejectionHistoryTime}>
                         {rh.rejectedAt} · {rh.rejectedBy}
+                        {rh.type && (
+                          <Text
+                            style={{
+                              marginLeft: 12,
+                              padding: '2rpx 10rpx',
+                              borderRadius: 999,
+                              fontSize: 20,
+                              background: rh.type === 'spotcheck' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                              color: rh.type === 'spotcheck' ? '#EF4444' : '#F59E0B'
+                            }}
+                          >
+                            {rh.type === 'spotcheck' ? '抽检驳回' : '初审驳回'}
+                          </Text>
+                        )}
                       </Text>
                       <Text className={styles.rejectionHistoryReason}>{rh.reason}</Text>
                     </View>
@@ -695,6 +719,9 @@ const RectificationPage: React.FC = () => {
       <View className={styles.bottomBar}>
         <Button className={styles.btnBack} onClick={() => Taro.navigateBack()}>
           返回
+        </Button>
+        <Button className={styles.btnCallList} onClick={handleGotoCallList}>
+          📞 当天通话
         </Button>
         <Button
           className={classnames(styles.btnSubmit, {

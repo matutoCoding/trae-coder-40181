@@ -10,8 +10,9 @@ import EmptyState from '@/components/EmptyState'
 import styles from './index.module.scss'
 
 const CallsPage: React.FC = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const calls = useQCStore(state => state.calls)
+  const callsFilter = useQCStore(state => state.callsFilter)
+  const setCallsFilter = useQCStore(state => state.setCallsFilter)
 
   const availableDates = useMemo(() => {
     const set = new Set(calls.map(c => c.date))
@@ -19,7 +20,13 @@ const CallsPage: React.FC = () => {
   }, [calls])
 
   const [selectedDate, setSelectedDate] = useState(
-    availableDates.length > 0 ? availableDates[0] : getTodayDate()
+    callsFilter.date || (availableDates.length > 0 ? availableDates[0] : getTodayDate())
+  )
+
+  const [selectedProject, setSelectedProject] = useState<Project | null>(
+    callsFilter.project
+      ? { id: callsFilter.project, name: callsFilter.project }
+      : null
   )
 
   const filteredCalls = useMemo(() => {
@@ -51,8 +58,11 @@ const CallsPage: React.FC = () => {
     }).then(res => {
       if (res.tapIndex === 0) {
         setSelectedProject(null)
+        setCallsFilter({ project: null })
       } else {
-        setSelectedProject(mockProjects[res.tapIndex - 1])
+        const p = mockProjects[res.tapIndex - 1]
+        setSelectedProject(p)
+        setCallsFilter({ project: p.name })
       }
     }).catch(() => {})
   }
@@ -60,7 +70,9 @@ const CallsPage: React.FC = () => {
   const showDatePicker = () => {
     const items = availableDates.map(d => `${d}（${dateCallCounts.get(d) || 0}通）`)
     Taro.showActionSheet({ itemList: items }).then(res => {
-      setSelectedDate(availableDates[res.tapIndex])
+      const d = availableDates[res.tapIndex]
+      setSelectedDate(d)
+      setCallsFilter({ date: d })
     }).catch(() => {})
   }
 

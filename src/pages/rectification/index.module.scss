@@ -423,12 +423,29 @@
 
 .btnBack {
   @include button-reset;
-  flex: 1;
+  flex: 0 0 auto;
+  width: 120rpx;
   height: $button-height-lg;
   border-radius: $radius-button;
   background: $color-bg-gray;
   color: $color-text-secondary;
   font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.btnCallList {
+  @include button-reset;
+  flex: 0 0 auto;
+  width: 180rpx;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  background: rgba(43, 90, 255, 0.1);
+  color: $color-primary;
+  font-size: $font-size-sm;
   font-weight: $font-weight-medium;
 
   &:active {

@@ -40,8 +40,22 @@ interface QCStore {
   batchReject: (rejections: ConfirmRejectionItem[], confirmedBy: string) => number
 
   spotCheckTask: (taskId: string, pass: boolean, remark: string, checkedBy: string) => void
+  batchSpotCheck: (taskIds: string[], pass: boolean, remark: string, checkedBy: string) => number
+  batchSpotCheckReject: (rejections: ConfirmRejectionItem[], checkedBy: string) => number
   completeTask: (taskId: string, completedBy: string, type: 'auto' | 'spotcheck-pass' | 'manual', remark?: string) => void
   batchComplete: (taskIds: string[], completedBy: string, type: 'auto' | 'spotcheck-pass' | 'manual') => number
+
+  lastCreatedTaskId: string | null
+  setLastCreatedTaskId: (id: string | null) => void
+
+  callsFilter: { project: string | null; date: string | null }
+  setCallsFilter: (filter: Partial<{ project: string | null; date: string | null }>) => void
+
+  tasksFilter: { project: string | null; supplier: string | null; tab: TaskStatus | 'all' }
+  setTasksFilter: (filter: Partial<{ project: string | null; supplier: string | null; tab: TaskStatus | 'all' }>) => void
+
+  reportFilter: { startDate: string; endDate: string; lastDrillProject: string | null }
+  setReportFilter: (filter: Partial<{ startDate: string; endDate: string; lastDrillProject: string | null }>) => void
 }
 
 const getTimeStr = () => {
@@ -121,7 +135,10 @@ export const useQCStore = create<QCStore>((set, get) => ({
     console.log('[Store] createTaskFromCall success:', newTask.id)
     set(state => ({
       tasks: [newTask, ...state.tasks],
-      calls: state.calls.map(c => c.id === callId ? { ...c, status: 'processing' } : c)
+      calls: state.calls.map(c => c.id === callId ? { ...c, status: 'processing' } : c),
+      lastCreatedTaskId: newTask.id,
+      callsFilter: { ...state.callsFilter, date: call.date, project: call.projectName },
+      tasksFilter: { ...state.tasksFilter, project: call.projectName, supplier: assignedTo, tab: 'pending' }
     }))
     return newTask
   },
@@ -417,5 +434,107 @@ export const useQCStore = create<QCStore>((set, get) => ({
       })
     }))
     return count
-  }
+  },
+
+  batchSpotCheck: (taskIds, pass, remark, checkedBy) => {
+    console.log('[Store] batchSpotCheck, ids:', taskIds.length, pass)
+    const timeStr = getTimeStr()
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (!taskIds.includes(t.id) || t.status !== 'confirmed') return t
+        count++
+        const reviewRecord: ReviewRecord = {
+          reviewedAt: timeStr,
+          reviewedBy: checkedBy,
+          result: pass ? 'accepted' : 'rejected',
+          remark,
+          type: 'spotcheck'
+        }
+        const base = {
+          ...t,
+          spotChecked: true,
+          spotCheckResult: pass ? 'pass' : 'fail',
+          spotCheckedBy: checkedBy,
+          spotCheckedAt: timeStr,
+          spotCheckRemark: remark,
+          reviewHistory: [...(t.reviewHistory || []), reviewRecord]
+        }
+        if (pass) {
+          return {
+            ...base,
+            status: 'completed' as const,
+            completedBy: checkedBy,
+            completedAt: timeStr,
+            completionType: 'spotcheck-pass' as const
+          }
+        }
+        const rejectionRecord: RejectionRecord = {
+          rejectedAt: timeStr,
+          rejectedBy: checkedBy,
+          reason: remark,
+          previousStatus: 'confirmed',
+          type: 'spotcheck'
+        }
+        return {
+          ...base,
+          status: 'rejected' as const,
+          rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord]
+        }
+      })
+    }))
+    return count
+  },
+
+  batchSpotCheckReject: (rejections, checkedBy) => {
+    console.log('[Store] batchSpotCheckReject, items:', rejections.length)
+    const timeStr = getTimeStr()
+    const rejectionMap = new Map(rejections.map(r => [r.taskId, r.remark]))
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        const remark = rejectionMap.get(t.id)
+        if (remark === undefined || t.status !== 'confirmed') return t
+        count++
+        const reviewRecord: ReviewRecord = {
+          reviewedAt: timeStr,
+          reviewedBy: checkedBy,
+          result: 'rejected',
+          remark,
+          type: 'spotcheck'
+        }
+        const rejectionRecord: RejectionRecord = {
+          rejectedAt: timeStr,
+          rejectedBy: checkedBy,
+          reason: remark,
+          previousStatus: 'confirmed',
+          type: 'spotcheck'
+        }
+        return {
+          ...t,
+          status: 'rejected',
+          spotChecked: true,
+          spotCheckResult: 'fail',
+          spotCheckedBy: checkedBy,
+          spotCheckedAt: timeStr,
+          spotCheckRemark: remark,
+          reviewHistory: [...(t.reviewHistory || []), reviewRecord],
+          rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord]
+        }
+      })
+    }))
+    return count
+  },
+
+  lastCreatedTaskId: null,
+  setLastCreatedTaskId: (id) => set({ lastCreatedTaskId: id }),
+
+  callsFilter: { project: null, date: null },
+  setCallsFilter: (filter) => set(state => ({ callsFilter: { ...state.callsFilter, ...filter } })),
+
+  tasksFilter: { project: null, supplier: null, tab: 'all' as TaskStatus | 'all' },
+  setTasksFilter: (filter) => set(state => ({ tasksFilter: { ...state.tasksFilter, ...filter } })),
+
+  reportFilter: { startDate: '2024-06-17', endDate: '2024-06-20', lastDrillProject: null },
+  setReportFilter: (filter) => set(state => ({ reportFilter: { ...state.reportFilter, ...filter } }))
 }))
