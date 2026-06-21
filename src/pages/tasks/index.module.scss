@@ -1,0 +1,121 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(43, 90, 255, 0.06) 0%, $color-bg-page 30%);
+  padding-bottom: 120rpx;
+}
+
+.header {
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.roleSwitch {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 6rpx;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.roleItem {
+  flex: 1;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    box-shadow: 0 4rpx 12rpx rgba(43, 90, 255, 0.3);
+  }
+}
+
+.summaryRow {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.summaryItem {
+  flex: 1;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  text-align: center;
+}
+
+.summaryNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  margin-bottom: 6rpx;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.tabs {
+  display: flex;
+  padding: 0 $page-padding;
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tabItem {
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  box-shadow: $shadow-card;
+  white-space: nowrap;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.listSection {
+  padding: 0 $page-padding;
+}
+
+.sectionTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md 0;
+}
+
+.titleText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.countText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.listWrap {
+  padding-bottom: $spacing-lg;
+}

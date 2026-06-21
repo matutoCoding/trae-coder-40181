@@ -1,0 +1,28 @@
+@use '@/styles/variables.scss' as *;
+
+.wrap {
+  padding: $spacing-xl * 2 $spacing-lg;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: $radius-round;
+  background: $color-bg-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80rpx;
+  margin-bottom: $spacing-lg;
+}
+
+.text {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  text-align: center;
+  line-height: $line-height-normal;
+}

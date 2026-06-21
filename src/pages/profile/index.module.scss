@@ -1,0 +1,183 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xl $page-padding $spacing-xl * 2;
+  position: relative;
+  overflow: hidden;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx $spacing-md;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  margin-bottom: $spacing-md;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.avatar {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-round;
+  background: rgba(255, 255, 255, 0.3);
+  border: 4rpx solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-bold;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.userName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.userCompany {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.roleSwitchBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-md;
+  background: rgba(255, 255, 255, 0.25);
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  margin-top: $spacing-sm;
+
+  &:active {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.statSection {
+  margin: -$spacing-xl * 1.5 $page-padding $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-float;
+  position: relative;
+  z-index: 10;
+}
+
+.statTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.statGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.statBlock {
+  width: calc(50% - 8rpx);
+  padding: $spacing-md;
+  background: $color-bg-gray;
+  border-radius: $radius-md;
+}
+
+.statBlockNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin-bottom: 4rpx;
+}
+
+.statBlockNum.accent {
+  color: $color-error;
+}
+
+.statBlockNum.success {
+  color: $color-success;
+}
+
+.statBlockLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.menuSection {
+  padding: 0 $page-padding;
+}
+
+.menuGroup {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xs 0;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  transition: background $transition-fast;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.menuIcon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  margin-right: $spacing-md;
+  background: $color-primary-bg;
+}
+
+.menuContent {
+  flex: 1;
+}
+
+.menuText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.menuArrow {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.menuDivider {
+  height: 1rpx;
+  background: $color-divider;
+  margin: 0 $spacing-lg;
+}

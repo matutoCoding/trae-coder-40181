@@ -1,0 +1,148 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.agentInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.agentAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+}
+
+.agentMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.agentName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.supplierTag {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.emotionBadge {
+  padding: 6rpx $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.cardBody {
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-md;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.suspectedBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx $spacing-sm;
+  background: $color-error-bg;
+  border-radius: $radius-sm;
+}
+
+.suspectedNum {
+  color: $color-error;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-md;
+}
+
+.suspectedText {
+  color: $color-error;
+  font-size: $font-size-xs;
+}
+
+.cleanBox {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx $spacing-sm;
+  background: $color-success-bg;
+  border-radius: $radius-sm;
+  color: $color-success;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.projectTag {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: $color-primary-bg;
+  padding: 6rpx $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.actionText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
