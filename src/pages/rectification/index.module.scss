@@ -462,3 +462,173 @@
     box-shadow: 0 4rpx 16rpx rgba(239, 68, 68, 0.25);
   }
 }
+
+.infoRow {
+  display: flex;
+  gap: $spacing-lg;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: $font-size-xs;
+  opacity: 0.9;
+
+  &.overdue {
+    color: #FEE2E2;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.priorityTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  background: rgba(255, 255, 255, 0.2);
+
+  &.high { background: rgba(239, 68, 68, 0.3); }
+  &.medium { background: rgba(245, 158, 11, 0.3); }
+  &.low { background: rgba(16, 185, 129, 0.3); }
+}
+
+.versionTabs {
+  display: flex;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+  border-bottom: 2rpx solid $color-divider;
+  padding-bottom: $spacing-sm;
+}
+
+.versionTab {
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-bg-gray;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+    font-weight: $font-weight-medium;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.versionMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.completedBanner {
+  padding: $spacing-md;
+  background: $color-success-bg;
+  border: 2rpx solid $color-success;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.completedText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.completedSub {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.spotcheckSection {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 2rpx dashed $color-divider;
+}
+
+.spotcheckHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.spotcheckTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.spotcheckStatus {
+  font-size: $font-size-xs;
+  padding: 2rpx 12rpx;
+  border-radius: $radius-round;
+  background: $color-bg-gray;
+  color: $color-text-secondary;
+
+  &.pass {
+    background: $color-success-bg;
+    color: $color-success;
+  }
+
+  &.fail {
+    background: $color-error-bg;
+    color: $color-error;
+  }
+}
+
+.spotcheckContent {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  background: $color-bg-gray;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.spotcheckActions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.spotcheckBtn {
+  flex: 1;
+  height: $button-height-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &.pass {
+    background: $color-success;
+    color: $color-text-white;
+  }
+
+  &.fail {
+    background: $color-error;
+    color: $color-text-white;
+  }
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.97);
+  }
+}
+

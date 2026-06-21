@@ -1,0 +1,239 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(43, 90, 255, 0.06) 0%, $color-bg-page 25%);
+  padding-bottom: $spacing-xl;
+}
+
+.header {
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.pageTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.pageSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+}
+
+.statBar {
+  display: flex;
+  gap: $spacing-xs;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm;
+  box-shadow: $shadow-card;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm 0;
+
+  & + & {
+    border-left: 1rpx solid $color-divider;
+  }
+}
+
+.statNum {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  margin-bottom: 2rpx;
+
+  &.warning { color: $color-warning; }
+  &.danger { color: $color-error; }
+  &.primary { color: $color-primary; }
+  &.success { color: $color-success; }
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  padding: 0 $page-padding $spacing-md;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.filterChip {
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+  white-space: nowrap;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+.list {
+  padding: 0 $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.ledgerCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+  border-left: 6rpx solid $color-text-tertiary;
+
+  &.overdue {
+    border-left-color: $color-error;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.06) 0%, $color-bg-card 30%);
+  }
+
+  &.high { border-left-color: $color-error; }
+  &.medium { border-left-color: $color-warning; }
+  &.low { border-left-color: $color-success; }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-sm;
+}
+
+.cardTitle {
+  flex: 1;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-right: $spacing-sm;
+}
+
+.cardStatus {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  &.pending { background: rgba(245, 158, 11, 0.12); color: $color-warning; }
+  &.rectifying { background: rgba(43, 90, 255, 0.1); color: $color-primary; }
+  &.rejected { background: rgba(239, 68, 68, 0.1); color: $color-error; }
+  &.confirmed { background: rgba(16, 185, 129, 0.1); color: $color-success; }
+  &.completed { background: rgba(107, 114, 128, 0.1); color: $color-text-tertiary; }
+  &.appealing { background: rgba(139, 92, 246, 0.1); color: #8B5CF6; }
+}
+
+.overdueTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 2rpx 10rpx;
+  background: $color-error;
+  color: $color-text-white;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  margin-right: $spacing-xs;
+}
+
+.priorityTag {
+  display: inline-block;
+  padding: 2rpx 10rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  margin-right: $spacing-xs;
+
+  &.high { background: rgba(239, 68, 68, 0.1); color: $color-error; }
+  &.medium { background: rgba(245, 158, 11, 0.1); color: $color-warning; }
+  &.low { background: rgba(16, 185, 129, 0.1); color: $color-success; }
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.metaValue {
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.deadlineItem {
+  color: $color-error;
+  font-weight: $font-weight-medium;
+}
+
+.actionPreview {
+  background: $color-bg-gray;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+  margin-top: $spacing-sm;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.versionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 2rpx 10rpx;
+  background: $color-primary-bg;
+  color: $color-primary;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  margin-top: $spacing-xs;
+}
+
+.attachmentsRow {
+  display: flex;
+  gap: $spacing-xs;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.attachItem {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 4rpx 12rpx;
+  background: $color-bg-gray;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}

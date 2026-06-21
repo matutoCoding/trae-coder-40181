@@ -1,0 +1,241 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(43, 90, 255, 0.06) 0%, $color-bg-page 25%);
+  padding-bottom: $spacing-xl;
+}
+
+.header {
+  padding: $spacing-xl $page-padding $spacing-lg;
+}
+
+.pageTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.pageSubtitle {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-lg;
+}
+
+.filterRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.filterItem {
+  flex: 1;
+  min-width: 200rpx;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.filterLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.filterValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  color: $color-text-white;
+  box-shadow: 0 8rpx 24rpx rgba(43, 90, 255, 0.25);
+  margin-bottom: $spacing-md;
+}
+
+.summaryTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.summaryGrid {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.summaryItem {
+  flex: 1;
+  text-align: center;
+
+  & + & {
+    border-left: 1rpx solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+.summaryNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  opacity: 0.85;
+}
+
+.section {
+  padding: 0 $page-padding;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md 0;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.sectionHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.projectCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.projectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.projectName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.projectArrow {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.metricsRow {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.metricChip {
+  flex: 1;
+  min-width: 120rpx;
+  padding: $spacing-sm $spacing-xs;
+  background: $color-bg-gray;
+  border-radius: $radius-md;
+  text-align: center;
+}
+
+.metricChipNum {
+  font-size: $font-size-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+  margin-bottom: 2rpx;
+
+  &.primary { color: $color-primary; }
+  &.success { color: $color-success; }
+  &.warning { color: $color-warning; }
+  &.danger { color: $color-error; }
+  &.purple { color: #8B5CF6; }
+}
+
+.metricChipLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.trendTag {
+  display: inline-block;
+  padding: 2rpx 8rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  margin-left: $spacing-xs;
+
+  &.up {
+    background: rgba(16, 185, 129, 0.1);
+    color: $color-success;
+  }
+
+  &.down {
+    background: rgba(239, 68, 68, 0.1);
+    color: $color-error;
+  }
+}
+
+.projectProgress {
+  margin-top: $spacing-sm;
+  height: 8rpx;
+  background: $color-bg-gray;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.projectProgressBar {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-success 100%);
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.projectProgressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

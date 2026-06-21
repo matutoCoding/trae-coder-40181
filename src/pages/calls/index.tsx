@@ -11,8 +11,16 @@ import styles from './index.module.scss'
 
 const CallsPage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [selectedDate, setSelectedDate] = useState(getTodayDate())
   const calls = useQCStore(state => state.calls)
+
+  const availableDates = useMemo(() => {
+    const set = new Set(calls.map(c => c.date))
+    return Array.from(set).sort().reverse()
+  }, [calls])
+
+  const [selectedDate, setSelectedDate] = useState(
+    availableDates.length > 0 ? availableDates[0] : getTodayDate()
+  )
 
   const filteredCalls = useMemo(() => {
     return calls.filter(call => {
@@ -21,6 +29,14 @@ const CallsPage: React.FC = () => {
       return projectMatch && dateMatch
     })
   }, [calls, selectedProject, selectedDate])
+
+  const dateCallCounts = useMemo(() => {
+    const map = new Map<string, number>()
+    calls.forEach(c => {
+      map.set(c.date, (map.get(c.date) || 0) + 1)
+    })
+    return map
+  }, [calls])
 
   const stats = useMemo(() => {
     const total = filteredCalls.length
@@ -42,17 +58,9 @@ const CallsPage: React.FC = () => {
   }
 
   const showDatePicker = () => {
-    const dates: string[] = []
-    const today = new Date()
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() - i)
-      dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
-    }
-    Taro.showActionSheet({
-      itemList: dates
-    }).then(res => {
-      setSelectedDate(dates[res.tapIndex])
+    const items = availableDates.map(d => `${d}（${dateCallCounts.get(d) || 0}通）`)
+    Taro.showActionSheet({ itemList: items }).then(res => {
+      setSelectedDate(availableDates[res.tapIndex])
     }).catch(() => {})
   }
 

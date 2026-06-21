@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import {
   CallRecord, RectificationTask, Violation, ViolationCategory,
-  TaskStatus, Attachment, RejectionRecord
+  TaskStatus, Attachment, RejectionRecord, RectificationVersion, ReviewRecord
 } from '@/types'
 import { mockCalls } from '@/data/calls'
 import { mockTasks } from '@/data/tasks'
@@ -24,20 +24,24 @@ interface QCStore {
   addViolationToCall: (callId: string, lineId: string, category: ViolationCategory, description: string, createdBy: string) => Violation
   removeViolationFromCall: (callId: string, lineId: string) => void
 
-  createTaskFromCall: (callId: string, assignedTo: string) => RectificationTask | null
+  createTaskFromCall: (callId: string, assignedTo: string, responsiblePerson?: string, expectedCompleteDate?: string) => RectificationTask | null
   updateTask: (taskId: string, updates: Partial<RectificationTask>) => void
   updateTaskStatus: (taskId: string, status: TaskStatus) => void
 
   submitAppeal: (taskId: string, reason: string, attachments?: Attachment[]) => void
-  submitRectification: (taskId: string, action: string, attachments?: Attachment[]) => void
+  submitRectification: (taskId: string, action: string, attachments?: Attachment[], submittedBy?: string) => void
 
   confirmTask: (taskId: string, accepted: boolean, remark: string, confirmedBy: string) => void
 
   addAttachmentToTask: (taskId: string, field: 'appeal' | 'rectification', attachment: Attachment) => void
 
   batchRectify: (taskIds: string[], action: string) => number
-  batchConfirm: (taskIds: string[], confirmedBy: string) => number
+  batchConfirm: (taskIds: string[], confirmedBy: string, directComplete?: boolean) => number
   batchReject: (rejections: ConfirmRejectionItem[], confirmedBy: string) => number
+
+  spotCheckTask: (taskId: string, pass: boolean, remark: string, checkedBy: string) => void
+  completeTask: (taskId: string, completedBy: string, type: 'auto' | 'spotcheck-pass' | 'manual', remark?: string) => void
+  batchComplete: (taskIds: string[], completedBy: string, type: 'auto' | 'spotcheck-pass' | 'manual') => number
 }
 
 const getTimeStr = () => {
@@ -90,7 +94,7 @@ export const useQCStore = create<QCStore>((set, get) => ({
     }))
   },
 
-  createTaskFromCall: (callId, assignedTo) => {
+  createTaskFromCall: (callId, assignedTo, responsiblePerson, expectedCompleteDate) => {
     const call = get().calls.find(c => c.id === callId)
     if (!call) {
       console.error('[Store] createTaskFromCall: call not found', callId)
@@ -108,7 +112,11 @@ export const useQCStore = create<QCStore>((set, get) => ({
       status: 'pending',
       assignedTo,
       assignedAt: getTimeStr(),
-      resubmitCount: 0
+      responsiblePerson: responsiblePerson || assignedTo,
+      expectedCompleteDate,
+      priority: call.violations.length >= 2 ? 'high' : 'medium',
+      resubmitCount: 0,
+      rectificationVersions: []
     }
     console.log('[Store] createTaskFromCall success:', newTask.id)
     set(state => ({
@@ -147,10 +155,18 @@ export const useQCStore = create<QCStore>((set, get) => ({
     }))
   },
 
-  submitRectification: (taskId, action, attachments) => {
+  submitRectification: (taskId, action, attachments, submittedBy) => {
     console.log('[Store] submitRectification:', taskId)
     const task = get().tasks.find(t => t.id === taskId)
     if (!task) return
+    const versionNum = (task.resubmitCount || 0) + 1
+    const newVersion: RectificationVersion = {
+      version: versionNum,
+      action,
+      attachments: attachments || task.rectificationAttachments || [],
+      submittedAt: getTimeStr(),
+      submittedBy: submittedBy || task.responsiblePerson || task.assignedTo
+    }
     set(state => ({
       tasks: state.tasks.map(t => t.id === taskId ? {
         ...t,
@@ -159,7 +175,8 @@ export const useQCStore = create<QCStore>((set, get) => ({
         rectificationAction: action,
         rectificationAttachments: attachments || t.rectificationAttachments || [],
         rectificationAt: getTimeStr(),
-        resubmitCount: (t.resubmitCount || 0) + 1
+        resubmitCount: versionNum,
+        rectificationVersions: [...(t.rectificationVersions || []), newVersion]
       } : t)
     }))
   },
@@ -214,35 +231,60 @@ export const useQCStore = create<QCStore>((set, get) => ({
       tasks: state.tasks.map(t => {
         if (!taskIds.includes(t.id)) return t
         count++
+        const versionNum = (t.resubmitCount || 0) + 1
+        const newVersion: RectificationVersion = {
+          version: versionNum,
+          action,
+          attachments: t.rectificationAttachments || [],
+          submittedAt: timeStr,
+          submittedBy: t.responsiblePerson || t.assignedTo
+        }
         return {
           ...t,
           status: 'rectifying',
           admitted: true,
           rectificationAction: action,
           rectificationAt: timeStr,
-          resubmitCount: (t.resubmitCount || 0) + 1
+          resubmitCount: versionNum,
+          rectificationVersions: [...(t.rectificationVersions || []), newVersion]
         }
       })
     }))
     return count
   },
 
-  batchConfirm: (taskIds, confirmedBy) => {
-    console.log('[Store] batchConfirm, ids:', taskIds.length)
+  batchConfirm: (taskIds, confirmedBy, directComplete = true) => {
+    console.log('[Store] batchConfirm, ids:', taskIds.length, 'directComplete:', directComplete)
     const timeStr = getTimeStr()
     let count = 0
     set(state => ({
       tasks: state.tasks.map(t => {
         if (!taskIds.includes(t.id)) return t
         count++
-        return {
+        const reviewRecord: ReviewRecord = {
+          reviewedAt: timeStr,
+          reviewedBy: confirmedBy,
+          result: 'accepted',
+          type: 'first'
+        }
+        const base = {
           ...t,
-          status: 'confirmed',
           confirmedBy,
           confirmedAt: timeStr,
-          confirmResult: 'accepted',
-          confirmRemark: '批量审核通过'
+          confirmResult: 'accepted' as const,
+          confirmRemark: directComplete ? '批量审核通过并完成归档' : '批量审核通过',
+          reviewHistory: [...(t.reviewHistory || []), reviewRecord]
         }
+        if (directComplete) {
+          return {
+            ...base,
+            status: 'completed' as const,
+            completedBy: confirmedBy,
+            completedAt: timeStr,
+            completionType: 'manual' as const
+          }
+        }
+        return { ...base, status: 'confirmed' as const }
       })
     }))
     return count
@@ -264,6 +306,13 @@ export const useQCStore = create<QCStore>((set, get) => ({
           reason: remark,
           previousStatus: t.status
         }
+        const reviewRecord: ReviewRecord = {
+          reviewedAt: timeStr,
+          reviewedBy: confirmedBy,
+          result: 'rejected',
+          remark,
+          type: 'first'
+        }
         return {
           ...t,
           status: 'rejected',
@@ -271,7 +320,99 @@ export const useQCStore = create<QCStore>((set, get) => ({
           confirmedAt: timeStr,
           confirmResult: 'rejected',
           confirmRemark: remark,
-          rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord]
+          rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord],
+          reviewHistory: [...(t.reviewHistory || []), reviewRecord]
+        }
+      })
+    }))
+    return count
+  },
+
+  spotCheckTask: (taskId, pass, remark, checkedBy) => {
+    console.log('[Store] spotCheckTask:', taskId, pass)
+    const timeStr = getTimeStr()
+    const task = get().tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    const reviewRecord: ReviewRecord = {
+      reviewedAt: timeStr,
+      reviewedBy: checkedBy,
+      result: pass ? 'accepted' : 'rejected',
+      remark,
+      type: 'spotcheck'
+    }
+
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (t.id !== taskId) return t
+        const base = {
+          ...t,
+          spotChecked: true,
+          spotCheckResult: pass ? 'pass' : 'fail',
+          spotCheckedBy: checkedBy,
+          spotCheckedAt: timeStr,
+          spotCheckRemark: remark,
+          reviewHistory: [...(t.reviewHistory || []), reviewRecord]
+        }
+        if (pass) {
+          return {
+            ...base,
+            status: 'completed' as const,
+            completedBy: checkedBy,
+            completedAt: timeStr,
+            completionType: 'spotcheck-pass' as const
+          }
+        }
+        if (!pass && task.status === 'confirmed') {
+          const rejectionRecord: RejectionRecord = {
+            rejectedAt: timeStr,
+            rejectedBy: checkedBy,
+            reason: remark,
+            previousStatus: 'confirmed'
+          }
+          return {
+            ...base,
+            status: 'rejected' as const,
+            rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord]
+          }
+        }
+        return base
+      })
+    }))
+  },
+
+  completeTask: (taskId, completedBy, type, remark) => {
+    console.log('[Store] completeTask:', taskId, type)
+    const timeStr = getTimeStr()
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (t.id !== taskId) return t
+        return {
+          ...t,
+          status: 'completed',
+          completedBy,
+          completedAt: timeStr,
+          completionType: type,
+          confirmRemark: remark || t.confirmRemark
+        }
+      })
+    }))
+  },
+
+  batchComplete: (taskIds, completedBy, type) => {
+    console.log('[Store] batchComplete, ids:', taskIds.length)
+    const timeStr = getTimeStr()
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (!taskIds.includes(t.id)) return t
+        count++
+        return {
+          ...t,
+          status: 'completed',
+          completedBy,
+          completedAt: timeStr,
+          completionType: type
         }
       })
     }))

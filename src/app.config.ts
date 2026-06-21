@@ -4,7 +4,9 @@ export default defineAppConfig({
     'pages/tasks/index',
     'pages/profile/index',
     'pages/call-detail/index',
-    'pages/rectification/index'
+    'pages/rectification/index',
+    'pages/report/index',
+    'pages/ledger/index'
   ],
   window: {
     backgroundTextStyle: 'light',

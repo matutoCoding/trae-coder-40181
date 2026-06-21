@@ -28,13 +28,14 @@ const getTimeStr = () => {
 
 const RectificationPage: React.FC = () => {
   const router = useRouter()
-  const taskId = router.params.id || 't1'
+  const taskId = router.params.id || router.params.taskId || 't1'
 
   const task = useQCStore(state => state.tasks.find(t => t.id === taskId) || state.tasks[0])
   const submitAppeal = useQCStore(state => state.submitAppeal)
   const submitRectification = useQCStore(state => state.submitRectification)
   const confirmTask = useQCStore(state => state.confirmTask)
   const updateTask = useQCStore(state => state.updateTask)
+  const spotCheckTask = useQCStore(state => state.spotCheckTask)
 
   const [currentRole, setCurrentRole] = useState<UserRole>(
     task?.status === 'confirmed' || task?.status === 'completed' ? 'partyA' : 'supplier'
@@ -45,6 +46,8 @@ const RectificationPage: React.FC = () => {
   const [rectificationAction, setRectificationAction] = useState(task?.rectificationAction || '')
   const [rectificationAttachments, setRectificationAttachments] = useState<Attachment[]>(task?.rectificationAttachments || [])
   const [confirmRemark, setConfirmRemark] = useState(task?.confirmRemark || '')
+  const [spotCheckRemark, setSpotCheckRemark] = useState(task?.spotCheckRemark || '')
+  const [viewVersion, setViewVersion] = useState<number | null>(null)
 
   if (!task) return null
 
@@ -56,9 +59,15 @@ const RectificationPage: React.FC = () => {
   const isPending = task.status === 'pending'
   const isAppealing = task.status === 'appealing'
   const isRectifying = task.status === 'rectifying'
-  const isConfirmed = task.status === 'confirmed' || task.status === 'completed'
+  const isConfirmed = task.status === 'confirmed'
+  const isCompleted = task.status === 'completed'
+  const isClosed = isConfirmed || isCompleted
   const canEditSupplier = currentRole === 'supplier' && (isPending || isRejected)
   const canConfirmPartyA = currentRole === 'partyA' && (isAppealing || isRectifying)
+  const canSpotCheck = currentRole === 'partyA' && isConfirmed && !task.spotChecked
+
+  const versions = task.rectificationVersions || []
+  const hasMultipleVersions = versions.length > 1
 
   const handleRoleSwitch = () => {
     Taro.showActionSheet({
@@ -194,6 +203,42 @@ const RectificationPage: React.FC = () => {
     })
   }
 
+  const handleSpotCheck = (pass: boolean) => {
+    if (!pass && !spotCheckRemark.trim()) {
+      Taro.showModal({
+        title: '抽检驳回',
+        content: '请填写抽检驳回理由，以便供应商了解整改方向。',
+        editable: true,
+        placeholderText: '请输入抽检驳回理由...',
+        success: (res) => {
+          if (res.confirm && res.content?.trim()) {
+            setSpotCheckRemark(res.content)
+            doSpotCheck(false, res.content)
+          } else if (res.confirm) {
+            Taro.showToast({ title: '请填写驳回理由', icon: 'none' })
+          }
+        }
+      })
+      return
+    }
+    doSpotCheck(pass, spotCheckRemark || (pass ? '抽检合格，整改到位' : ''))
+  }
+
+  const doSpotCheck = (pass: boolean, remark: string) => {
+    Taro.showModal({
+      title: pass ? '抽检通过' : '抽检驳回',
+      content: pass
+        ? '确认抽检通过？任务将进入已完成状态。'
+        : '确认抽检驳回？任务将回到待补充状态。',
+      success: (res) => {
+        if (res.confirm) {
+          spotCheckTask(task.id, pass, remark, '质检-当前用户')
+          Taro.showToast({ title: pass ? '抽检通过' : '已驳回', icon: 'success' })
+        }
+      }
+    })
+  }
+
   const renderAttachments = (attachments: Attachment[], editable: boolean, field: 'appeal' | 'rectification') => {
     if (!attachments?.length && !editable) return null
     return (
@@ -233,7 +278,8 @@ const RectificationPage: React.FC = () => {
   }
 
   const getSubmitBtnText = () => {
-    if (isConfirmed) return '任务已完成'
+    if (isCompleted) return '任务已完成归档'
+    if (isConfirmed) return '已确认，待抽检'
     if (currentRole === 'partyA') return '请在上方操作确认'
     if (!canEditSupplier) return '等待对方处理'
     if (!actionType) return '请先选择处理方式'
@@ -243,7 +289,7 @@ const RectificationPage: React.FC = () => {
   }
 
   const isSubmitDisabled = () => {
-    if (isConfirmed || currentRole === 'partyA' || !canEditSupplier || !actionType) return true
+    if (isClosed || currentRole === 'partyA' || !canEditSupplier || !actionType) return true
     if (actionType === 'appeal' && !appealReason.trim()) return true
     if (actionType === 'admit' && !rectificationAction.trim()) return true
     return false
@@ -262,6 +308,24 @@ const RectificationPage: React.FC = () => {
             分配时间：{task.assignedAt}{'\n'}
             通话时间：{task.callRecord.date} {task.callRecord.startTime}
           </Text>
+          <View className={styles.infoRow}>
+            {task.responsiblePerson && (
+              <View className={styles.infoItem}>
+                👤 负责人：{task.responsiblePerson}
+              </View>
+            )}
+            {task.expectedCompleteDate && (
+              <View className={classnames(styles.infoItem, { [styles.overdue]: task.overdue })}>
+                📅 预计完成：{task.expectedCompleteDate}
+                {task.overdue && '（已超期）'}
+              </View>
+            )}
+            {task.priority && (
+              <View className={`${styles.priorityTag} ${task.priority}`}>
+                {task.priority === 'high' ? '🔥 高优先级' : task.priority === 'low' ? '🌱 低优先级' : '⚡ 中优先级'}
+              </View>
+            )}
+          </View>
           {task.resubmitCount && task.resubmitCount > 0 && (
             <View className={styles.resubmitBadge}>⚠️ 已提交 {task.resubmitCount} 次</View>
           )}
@@ -329,6 +393,20 @@ const RectificationPage: React.FC = () => {
               <Text className={styles.sectionTitle}>📋 处理记录</Text>
             </View>
             <View className={styles.card}>
+              {isCompleted && (
+                <View className={styles.completedBanner}>
+                  <Text style={{ fontSize: 32 }}>✅</Text>
+                  <View className={styles.completedText}>
+                    任务已完成归档
+                    <View className={styles.completedSub}>
+                      {task.completionType === 'spotcheck-pass' ? `抽检通过 · ${task.spotCheckedBy || ''}` :
+                       task.completionType === 'manual' ? '人工确认完成' : '系统自动归档'}
+                      {task.completedAt && ` · ${task.completedAt}`}
+                    </View>
+                  </View>
+                </View>
+              )}
+
               {(task.appealReason || task.appealAttachments?.length) && (
                 <View className={styles.infoBlock}>
                   <View className={styles.blockLabel}>
@@ -339,16 +417,57 @@ const RectificationPage: React.FC = () => {
                   {renderAttachments(task.appealAttachments || [], false, 'appeal')}
                 </View>
               )}
+
               {task.admitted && task.rectificationAction && (
                 <View className={styles.infoBlock}>
                   <View className={styles.blockLabel}>
                     <Text>整改动作</Text>
                     {task.rectificationAt && <Text className={styles.blockTime}>{task.rectificationAt}</Text>}
                   </View>
-                  <View className={styles.blockContent}>{task.rectificationAction}</View>
-                  {renderAttachments(task.rectificationAttachments || [], false, 'rectification')}
+
+                  {hasMultipleVersions && (
+                    <View className={styles.versionTabs}>
+                      {versions.map((v, idx) => (
+                        <View
+                          key={v.version}
+                          className={classnames(styles.versionTab, {
+                            [styles.active]: (viewVersion === null && idx === versions.length - 1) || viewVersion === v.version
+                          })}
+                          onClick={() => setViewVersion(viewVersion === v.version ? null : v.version)}
+                        >
+                          第{v.version}版
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {hasMultipleVersions && viewVersion && (
+                    <View className={styles.versionMeta}>
+                      提交人：{versions.find(v => v.version === viewVersion)?.submittedBy || '-'} ·
+                      提交时间：{versions.find(v => v.version === viewVersion)?.submittedAt || '-'}
+                    </View>
+                  )}
+
+                  <View className={styles.blockContent}>
+                    {hasMultipleVersions && viewVersion
+                      ? versions.find(v => v.version === viewVersion)?.action
+                      : task.rectificationAction
+                    }
+                  </View>
+
+                  {hasMultipleVersions && viewVersion
+                    ? renderAttachments(versions.find(v => v.version === viewVersion)?.attachments || [], false, 'rectification')
+                    : renderAttachments(task.rectificationAttachments || [], false, 'rectification')
+                  }
+
+                  {hasMultipleVersions && !viewVersion && (
+                    <View className={styles.versionMeta}>
+                      💡 点击上方版本标签可查看历史整改内容对比
+                    </View>
+                  )}
                 </View>
               )}
+
               {task.confirmedBy && (
                 <View className={styles.infoBlock}>
                   <View className={styles.blockLabel}>
@@ -368,12 +487,63 @@ const RectificationPage: React.FC = () => {
                         color: '#fff'
                       }}
                     >
-                      {task.confirmResult === 'accepted' ? '✓ 处理通过' : '✗ 已驳回待补充'}
+                      {task.confirmResult === 'accepted' ? '✓ 初审通过' : '✗ 已驳回待补充'}
                     </View>
                     {task.confirmRemark && (
                       <Text className={styles.resultRemark}>{task.confirmRemark}</Text>
                     )}
                   </View>
+                </View>
+              )}
+
+              {(task.spotChecked || canSpotCheck) && (
+                <View className={styles.spotcheckSection}>
+                  <View className={styles.spotcheckHeader}>
+                    <Text className={styles.spotcheckTitle}>🔍 抽检复核</Text>
+                    {task.spotChecked && (
+                      <Text className={classnames(styles.spotcheckStatus, {
+                        [styles.pass]: task.spotCheckResult === 'pass',
+                        [styles.fail]: task.spotCheckResult === 'fail'
+                      })}>
+                        {task.spotCheckResult === 'pass' ? '✓ 抽检通过' : '✗ 抽检驳回'}
+                      </Text>
+                    )}
+                  </View>
+
+                  {task.spotChecked && task.spotCheckRemark && (
+                    <View className={styles.spotcheckContent}>
+                      {task.spotCheckedBy && <Text>{task.spotCheckedBy} · </Text>}
+                      {task.spotCheckedAt && <Text>{task.spotCheckedAt}{'\n'}</Text>}
+                      {task.spotCheckRemark}
+                    </View>
+                  )}
+
+                  {canSpotCheck && (
+                    <>
+                      <Textarea
+                        className={styles.textarea}
+                        placeholder='请填写抽检意见（驳回必填）...'
+                        value={spotCheckRemark}
+                        onInput={(e) => setSpotCheckRemark(e.detail.value)}
+                        maxlength={300}
+                        style={{ marginBottom: 16 }}
+                      />
+                      <View className={styles.spotcheckActions}>
+                        <View
+                          className={classnames(styles.spotcheckBtn, styles.fail)}
+                          onClick={() => handleSpotCheck(false)}
+                        >
+                          抽检驳回
+                        </View>
+                        <View
+                          className={classnames(styles.spotcheckBtn, styles.pass)}
+                          onClick={() => handleSpotCheck(true)}
+                        >
+                          抽检通过
+                        </View>
+                      </View>
+                    </>
+                  )}
                 </View>
               )}
             </View>

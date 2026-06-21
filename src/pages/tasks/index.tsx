@@ -276,6 +276,32 @@ const TasksPage: React.FC = () => {
           </View>
         </View>
 
+        <View className={styles.quickEntry}>
+          <View
+            className={styles.quickItem}
+            onClick={() => Taro.navigateTo({ url: '/pages/report/index' })}
+          >
+            <Text className={styles.quickIcon}>📊</Text>
+            <Text className={styles.quickLabel}>质检报表</Text>
+          </View>
+          <View
+            className={styles.quickItem}
+            onClick={() => Taro.navigateTo({ url: '/pages/ledger/index' })}
+          >
+            <Text className={styles.quickIcon}>📋</Text>
+            <Text className={styles.quickLabel}>整改台账</Text>
+          </View>
+          {currentRole === 'partyA' && (
+            <View
+              className={styles.quickItem}
+              onClick={() => handleMetricClick('confirmed')}
+            >
+              <Text className={styles.quickIcon}>🔍</Text>
+              <Text className={styles.quickLabel}>抽检复核</Text>
+            </View>
+          )}
+        </View>
+
         {selectMode && batchCandidates.length > 0 && (
           <View className={styles.batchBar}>
             <View className={styles.batchInfo}>

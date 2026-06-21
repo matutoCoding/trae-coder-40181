@@ -71,6 +71,22 @@ export interface RejectionRecord {
   previousStatus: TaskStatus
 }
 
+export interface RectificationVersion {
+  version: number
+  action: string
+  attachments: Attachment[]
+  submittedAt: string
+  submittedBy: string
+}
+
+export interface ReviewRecord {
+  reviewedAt: string
+  reviewedBy: string
+  result: 'accepted' | 'rejected'
+  remark?: string
+  type: 'first' | 'spotcheck'
+}
+
 export interface RectificationTask {
   id: string
   callId: string
@@ -79,19 +95,41 @@ export interface RectificationTask {
   status: TaskStatus
   assignedTo: string
   assignedAt: string
+
+  responsiblePerson?: string
+  expectedCompleteDate?: string
+  priority?: 'high' | 'medium' | 'low'
+
   appealReason?: string
   appealAttachments?: Attachment[]
   appealAt?: string
+
   admitted?: boolean
   rectificationAction?: string
   rectificationAttachments?: Attachment[]
   rectificationAt?: string
+
+  rectificationVersions?: RectificationVersion[]
+
   confirmedBy?: string
   confirmedAt?: string
   confirmResult?: 'accepted' | 'rejected'
   confirmRemark?: string
+
+  completedBy?: string
+  completedAt?: string
+  completionType?: 'auto' | 'spotcheck-pass' | 'manual'
+
+  spotChecked?: boolean
+  spotCheckResult?: 'pass' | 'fail'
+  spotCheckedBy?: string
+  spotCheckedAt?: string
+  spotCheckRemark?: string
+
   rejectionHistory?: RejectionRecord[]
+  reviewHistory?: ReviewRecord[]
   resubmitCount?: number
+  overdue?: boolean
 }
 
 export const VIOLATION_CATEGORY_MAP: Record<ViolationCategory, { label: string; color: string }> = {
