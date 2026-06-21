@@ -7,11 +7,49 @@
   margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
   transition: all $transition-base;
+  display: flex;
+  align-items: stretch;
+  gap: $spacing-md;
+  border: 3rpx solid transparent;
 
   &:active {
     transform: scale(0.99);
     box-shadow: $shadow-card-hover;
   }
+
+  &.selected {
+    border-color: $color-primary;
+    background: $color-primary-bg;
+  }
+}
+
+.checkboxCol {
+  display: flex;
+  align-items: flex-start;
+  padding-top: $spacing-xs;
+}
+
+.checkbox {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: $radius-sm;
+  border: 3rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-card;
+  transition: all $transition-base;
+
+  &.checked {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+.mainCol {
+  flex: 1;
+  min-width: 0;
 }
 
 .cardHeader {
@@ -26,7 +64,7 @@
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
   @include text-ellipsis;
-  max-width: 480rpx;
+  max-width: 440rpx;
 }
 
 .statusBadge {
@@ -58,6 +96,7 @@
 .infoLabel {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
+  flex-shrink: 0;
 }
 
 .infoValue {
@@ -65,7 +104,7 @@
   color: $color-text-primary;
   font-weight: $font-weight-medium;
   @include text-ellipsis;
-  max-width: 420rpx;
+  max-width: 360rpx;
   text-align: right;
 }
 
@@ -74,7 +113,7 @@
   flex-wrap: wrap;
   gap: $spacing-xs;
   justify-content: flex-end;
-  max-width: 420rpx;
+  max-width: 360rpx;
 }
 
 .violationTag {

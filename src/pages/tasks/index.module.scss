@@ -3,7 +3,7 @@
 .page {
   min-height: 100vh;
   background: linear-gradient(180deg, rgba(43, 90, 255, 0.06) 0%, $color-bg-page 30%);
-  padding-bottom: 120rpx;
+  padding-bottom: 180rpx;
 }
 
 .header {
@@ -38,30 +38,202 @@
   }
 }
 
-.summaryRow {
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.dashboardCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.dashboardTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.resetBtn {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-primary-bg;
+  border-radius: $radius-sm;
+}
+
+.metricsGrid {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.metricItem {
+  width: calc(33.33% - 8rpx);
+  padding: $spacing-md $spacing-xs;
+  border-radius: $radius-md;
+  text-align: center;
+  transition: all $transition-base;
+  border: 2rpx solid transparent;
+
+  &.active {
+    border-color: $color-primary;
+    background: $color-primary-bg;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.metricNum {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+}
+
+.metricLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.batchBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  margin: 0 $page-padding $spacing-md;
+  border-radius: $radius-md;
+  color: $color-text-white;
+  box-shadow: 0 4rpx 16rpx rgba(43, 90, 255, 0.25);
+}
+
+.batchInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.batchNum {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.batchActions {
   display: flex;
   gap: $spacing-sm;
 }
 
-.summaryItem {
-  flex: 1;
-  background: $color-bg-card;
-  border-radius: $radius-md;
-  padding: $spacing-md;
-  box-shadow: $shadow-card;
-  text-align: center;
+.batchActionBtn {
+  padding: $spacing-xs $spacing-md;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+
+  &.danger {
+    background: rgba(255, 255, 255, 0.95);
+    color: $color-error;
+    font-weight: $font-weight-semibold;
+  }
+
+  &.primary {
+    background: rgba(255, 255, 255, 0.95);
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
 }
 
-.summaryNum {
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  line-height: 1.2;
-  margin-bottom: 6rpx;
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md $page-padding;
 }
 
-.summaryLabel {
-  font-size: $font-size-xs;
+.toolbarLeft {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+}
+
+.toolbarTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.toolbarCount {
+  font-size: $font-size-sm;
   color: $color-text-tertiary;
+}
+
+.toolbarRight {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.toolBtn {
+  padding: $spacing-xs $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  color: $color-primary;
+  box-shadow: $shadow-card;
+
+  &.active {
+    background: $color-primary;
+    color: $color-text-white;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 }
 
 .tabs {
@@ -83,6 +255,9 @@
   box-shadow: $shadow-card;
   white-space: nowrap;
   transition: all $transition-base;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
 
   &.active {
     background: $color-primary;
@@ -91,6 +266,17 @@
 
   &:active {
     transform: scale(0.97);
+  }
+}
+
+.tabCount {
+  font-size: $font-size-xs;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2rpx 10rpx;
+  border-radius: $radius-round;
+
+  .active & {
+    background: rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -118,4 +304,165 @@
 
 .listWrap {
   padding-bottom: $spacing-lg;
+}
+
+.modalMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $page-padding;
+}
+
+.modalContent {
+  width: 100%;
+  max-height: 80vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  font-size: $font-size-xl;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.modalBody {
+  padding: $spacing-lg;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 200rpx;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  background: $color-bg-gray;
+  font-size: $font-size-md;
+  line-height: $line-height-normal;
+  margin-bottom: $spacing-md;
+
+  &::placeholder {
+    color: $color-text-tertiary;
+  }
+}
+
+.modalHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+}
+
+.rejectItem {
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.rejectItemTitle {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rejectItemMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-normal;
+}
+
+.rejectItemTextarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 140rpx;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  border: 2rpx solid $color-border;
+  background: $color-bg-gray;
+  font-size: $font-size-sm;
+  line-height: $line-height-normal;
+
+  &.warning {
+    border-color: $color-error;
+    background: $color-error-bg;
+  }
+}
+
+.modalFooter {
+  padding: $spacing-md $spacing-lg;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  border-top: 1rpx solid $color-divider;
+  display: flex;
+  gap: $spacing-md;
+}
+
+.modalBtn {
+  flex: 1;
+  height: $button-height-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+
+  &.cancel {
+    background: $color-bg-gray;
+    color: $color-text-secondary;
+  }
+
+  &.confirm {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    box-shadow: 0 4rpx 12rpx rgba(43, 90, 255, 0.25);
+  }
+
+  &.danger {
+    background: linear-gradient(135deg, $color-error 0%, #F87171 100%);
+    color: $color-text-white;
+    box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.25);
+  }
+
+  &.disabled {
+    background: $color-text-disabled;
+    box-shadow: none;
+  }
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
 }

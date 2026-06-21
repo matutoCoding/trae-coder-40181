@@ -7,6 +7,11 @@ import { mockCalls } from '@/data/calls'
 import { mockTasks } from '@/data/tasks'
 import { generateId, getTodayDate } from '@/utils'
 
+interface ConfirmRejectionItem {
+  taskId: string
+  remark: string
+}
+
 interface QCStore {
   calls: CallRecord[]
   tasks: RectificationTask[]
@@ -29,6 +34,10 @@ interface QCStore {
   confirmTask: (taskId: string, accepted: boolean, remark: string, confirmedBy: string) => void
 
   addAttachmentToTask: (taskId: string, field: 'appeal' | 'rectification', attachment: Attachment) => void
+
+  batchRectify: (taskIds: string[], action: string) => number
+  batchConfirm: (taskIds: string[], confirmedBy: string) => number
+  batchReject: (rejections: ConfirmRejectionItem[], confirmedBy: string) => number
 }
 
 const getTimeStr = () => {
@@ -195,5 +204,77 @@ export const useQCStore = create<QCStore>((set, get) => ({
         return { ...t, [fieldKey]: [...existing, attachment] }
       })
     }))
+  },
+
+  batchRectify: (taskIds, action) => {
+    console.log('[Store] batchRectify, ids:', taskIds.length)
+    const timeStr = getTimeStr()
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (!taskIds.includes(t.id)) return t
+        count++
+        return {
+          ...t,
+          status: 'rectifying',
+          admitted: true,
+          rectificationAction: action,
+          rectificationAt: timeStr,
+          resubmitCount: (t.resubmitCount || 0) + 1
+        }
+      })
+    }))
+    return count
+  },
+
+  batchConfirm: (taskIds, confirmedBy) => {
+    console.log('[Store] batchConfirm, ids:', taskIds.length)
+    const timeStr = getTimeStr()
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        if (!taskIds.includes(t.id)) return t
+        count++
+        return {
+          ...t,
+          status: 'confirmed',
+          confirmedBy,
+          confirmedAt: timeStr,
+          confirmResult: 'accepted',
+          confirmRemark: '批量审核通过'
+        }
+      })
+    }))
+    return count
+  },
+
+  batchReject: (rejections, confirmedBy) => {
+    console.log('[Store] batchReject, items:', rejections.length)
+    const timeStr = getTimeStr()
+    const rejectionMap = new Map(rejections.map(r => [r.taskId, r.remark]))
+    let count = 0
+    set(state => ({
+      tasks: state.tasks.map(t => {
+        const remark = rejectionMap.get(t.id)
+        if (remark === undefined) return t
+        count++
+        const rejectionRecord: RejectionRecord = {
+          rejectedAt: timeStr,
+          rejectedBy: confirmedBy,
+          reason: remark,
+          previousStatus: t.status
+        }
+        return {
+          ...t,
+          status: 'rejected',
+          confirmedBy,
+          confirmedAt: timeStr,
+          confirmResult: 'rejected',
+          confirmRemark: remark,
+          rejectionHistory: [...(t.rejectionHistory || []), rejectionRecord]
+        }
+      })
+    }))
+    return count
   }
 }))

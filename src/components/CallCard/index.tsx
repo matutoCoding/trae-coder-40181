@@ -46,10 +46,10 @@ const CallCard: React.FC<CallCardProps> = ({ call }) => {
         </View>
         <View className={styles.infoRow}>
           <Text className={styles.infoLabel}>违规情况</Text>
-          {call.suspectedViolationCount > 0 ? (
+          {call.violations.length > 0 ? (
             <View className={styles.suspectedBox}>
-              <Text className={styles.suspectedNum}>{call.suspectedViolationCount}</Text>
-              <Text className={styles.suspectedText}>处疑似违规</Text>
+              <Text className={styles.suspectedNum}>{call.violations.length}</Text>
+              <Text className={styles.suspectedText}>处问题</Text>
             </View>
           ) : (
             <View className={styles.cleanBox}>无异常</View>
